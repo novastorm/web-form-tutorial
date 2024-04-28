@@ -1,6 +1,6 @@
 # Web Form Tutorial
 
-A quick tutorial on how to 
+A quick tutorial on how to access a remote resource and dynamically update a web page with javascript.
 
 [Requirements](#requirements)
 
@@ -214,4 +214,3 @@ A quick tutorial on how to
     </script>
     </html>
     ```
-    
