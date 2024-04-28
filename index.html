@@ -35,18 +35,21 @@
     async function fetchResource() {
         let response;
         try {
+            const url = 'http://localhost:3000';
             const headers = new Headers({
                 "Content-Type": "application/json",
                 "X-ECHO-HEADER": "Access-Control-Allow-Origin:*, Access-Control-Allow-Headers:*",
             });
            
-            response = await fetch('http://localhost:3000', {
+            let body = {
+                name: 'test',
+                email: 'user@exmaple.com'
+            };
+
+            response = await fetch(url, {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({
-                    name: 'test',
-                    email: 'user@exmaple.com'
-                })
+                body: JSON.stringify(body)
             });
         }
         catch (e) {
@@ -55,13 +58,7 @@
         }
 
         if (response?.ok) {
-            console.log(response);
-            console.log(response);
             responseJson = await response.json();
-            response.headers.forEach((v,k) => {
-                console.log(`${k} ==> ${v}`);
-            });
-
             let output = document.getElementById('output');
             output.innerHTML = JSON.stringify(responseJson, null, 2);
         }

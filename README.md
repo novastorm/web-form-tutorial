@@ -2,35 +2,59 @@
 
 A quick tutorial on how to access a remote resource and dynamically update a web page with javascript.
 
-[Requirements](#requirements)
+- [Requirements](#requirements)
+- [Setup](#setup)
+- [CGI Tutorial](#cgi-tutorial)
+- [Javascript Integration](#javascript-integration)
+
 
 ## Requirements [^](#web-form-tutorial)
 
 * [Docker](https://www.docker.com)
 * [Python 3](https://www.python.org)
 
+
 ## Setup [^](#web-form-tutorial)
 
 * Echo Server Container
+  
+    An echo server responds with data sent to the server. This echo server includes additional request information and can modify the response headers. This tutorial uses the echo server as as an example remote resource to call.
 
-  ```
-  docker run -d -p 3000:80 ealen/echo-server
-  ```
 
-  https://hub.docker.com/r/ealen/echo-server
+
+    ```
+    docker run -d -p 3000:80 ealen/echo-server
+    ```
+
+    https://hub.docker.com/r/ealen/echo-server
+
+    <details>
+      <summary>Stopping and removing the container</summary>
+
+    ```
+    echo_server_container=$(docker ps | grep echo-server | awk '{print $1}'); docker stop $echo_server_container; docker remove $echo_server_container; unset echo_server_container
+    ```
+    </details>
 
 
 ## CGI tutorial [^](#web-form-tutorial)
+
 
 ### Command line
 
 * curl
 
+    A command line tool to make http requests. Use `curl` to fetch the output of a resource request. This provides a chance to view the output schema for later reference.
+
+    request:
+
     ```
     curl http://localhost:3000
     ```
 
-    ```
+    response:
+
+    ``` no-copy
     {
         "host":{
             "hostname":"localhost",
@@ -66,61 +90,68 @@ A quick tutorial on how to access a remote resource and dynamically update a web
     }
     ```
 
+  <details>
+    <summary>Additional CGI Requests</summary>
+
+    * Fetch data from URL
+
+        ```
+        curl http://localhost:3000/resource
+        ```
+
+    * HTTP Methods
+
+        ```
+        curl http://localhost:3000/resource -X GET
+        ```
+
+    * HTTP Query Parameters
+
+        ```
+        curl http://localhost:3000/resource?Param0=Value0&Param1=Value1 -X GET
+        ```
+
+    * HTTP Request Body
+
+        ```
+        curl http://localhost:3000/resource -X POST -d '{"name0": "value0", "name1": "value1"}'
+        ```
+
+    * HTTP JSON Request Body
+
+        ```
+        curl http://localhost:3000/resource -H 'Content-Type: application/json' -X POST -d '{"key0": "value0", "key1": "value1"}'
+        ```
+  </details>
+
+
 ### Web Form
 
 * example form code
-  ```
-  <html>
-  <head>
-      <title>Form Primer</title>
-  </head>
-  <body>
-      <a href="http://localhost:3000/">test GET</a><br />
-      <br />
-      <a href="http://localhost:3000/resource">test GET Resource</a><br />
-      <br />
-      <form action="http://localhost:3000/" method="post">
-          <input type="text" name="name" placeholder="Name">
-          <input type="text" name="email" placeholder="Email">
-          <input type="submit" name="submit" value="Submit">
-      </form>
-  </body>
-  </html>
-  ```
 
-### CGI Requests
-
-* Fetch data from URL
+    This base html code provides example CGI form GET and POST calls to a remote resource.
 
     ```
-    curl http://localhost:3000/resource
+    <html>
+    <head>
+        <title>Form Primer</title>
+    </head>
+    <body>
+        <a href="http://localhost:3000/">test GET</a><br />
+        <br />
+        <a href="http://localhost:3000/resource">test GET Resource</a><br />
+        <br />
+        <form action="http://localhost:3000/" method="post">
+            <input type="text" name="name" placeholder="Name">
+            <input type="text" name="email" placeholder="Email">
+            <input type="submit" name="submit" value="Submit">
+        </form>
+    </body>
+    </html>
     ```
 
-* HTTP Methods
 
-    ```
-    curl http://localhost:3000/resource -X GET
-    ```
-
-* HTTP Query Parameters
-
-    ```
-    curl http://localhost:3000/resource?Param0=Value0&Param1=Value1 -X GET
-    ```
-
-* HTTP Request Body
-
-    ```
-    curl http://localhost:3000/resource -X POST -d '{"name0": "value0", "name1": "value1"}'
-    ```
-
-* HTTP JSON Request Body
-
-    ```
-    curl http://localhost:3000/resource -H 'Content-Type: application/json' -X POST -d '{"key0": "value0", "key1": "value1"}'
-    ```
-
-## Javascript Fetch [^](#web-form-tutorial)
+## Javascript Integration [^](#web-form-tutorial)
 
 * Start a python web server
 
@@ -129,6 +160,14 @@ A quick tutorial on how to access a remote resource and dynamically update a web
     ```
     python -m http.server
     ```
+
+    This starts a python webserver and serves files from the directory the command is run in.
+
+    <details>
+      <summary>Stopping the Webserver</summary>
+      type `<ctrl-C>` to exit the server
+    </details>
+
 
 * Form Code
 
@@ -170,18 +209,21 @@ A quick tutorial on how to access a remote resource and dynamically update a web
         async function fetchResource() {
             let response;
             try {
+                const url = 'http://localhost:3000';
                 const headers = new Headers({
                     "Content-Type": "application/json",
                     "X-ECHO-HEADER": "Access-Control-Allow-Origin:*, Access-Control-Allow-Headers:*",
                 });
               
-                response = await fetch('http://localhost:3000', {
+                let body = {
+                    name: 'test',
+                    email: 'user@exmaple.com'
+                };
+
+                response = await fetch(url, {
                     method: 'POST',
                     headers: headers,
-                    body: JSON.stringify({
-                        name: 'test',
-                        email: 'user@exmaple.com'
-                    })
+                    body: JSON.stringify(body)
                 });
             }
             catch (e) {
@@ -190,13 +232,7 @@ A quick tutorial on how to access a remote resource and dynamically update a web
             }
 
             if (response?.ok) {
-                console.log(response);
-                console.log(response);
                 responseJson = await response.json();
-                response.headers.forEach((v,k) => {
-                    console.log(`${k} ==> ${v}`);
-                });
-
                 let output = document.getElementById('output');
                 output.innerHTML = JSON.stringify(responseJson, null, 2);
             }
